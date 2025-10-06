@@ -36,6 +36,12 @@ class TestLikeSimplifier(unittest.TestCase):
         result = simplifier.simplify(["batman", "bat", "spider", "spiderman"])
         self.assertEqual(result, ["bat", "spider"])
 
+    def test_remove_exact_duplicates(self):
+        """Test that exact duplicates are removed."""
+        simplifier = LikeSimplifier()
+        result = simplifier.simplify(["batman", "robin", "batman"])
+        self.assertEqual(result, ["batman", "robin"])
+
 
 if __name__ == "__main__":
     unittest.main()
