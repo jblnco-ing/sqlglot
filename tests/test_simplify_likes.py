@@ -24,6 +24,12 @@ class TestLikeSimplifier(unittest.TestCase):
         result = simplifier.simplify(["super", "superman"])
         self.assertEqual(result, ["super"])
 
+    def test_simplify_by_prefix_reversed(self):
+        """Test that prefix simplification works regardless of order."""
+        simplifier = LikeSimplifier()
+        result = simplifier.simplify(["superman", "super", "superheroe"])
+        self.assertEqual(result, ["super"])
+
 
 if __name__ == "__main__":
     unittest.main()
