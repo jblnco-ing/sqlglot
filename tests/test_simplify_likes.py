@@ -18,6 +18,12 @@ class TestLikeSimplifier(unittest.TestCase):
         result = simplifier.simplify(["neron"])
         self.assertEqual(result, ["neron"])
 
+    def test_simplify_by_prefix(self):
+        """Test that duplicate prefix patterns are simplified."""
+        simplifier = LikeSimplifier()
+        result = simplifier.simplify(["super", "superman"])
+        self.assertEqual(result, ["super"])
+
 
 if __name__ == "__main__":
     unittest.main()
