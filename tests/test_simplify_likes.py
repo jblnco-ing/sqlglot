@@ -30,6 +30,12 @@ class TestLikeSimplifier(unittest.TestCase):
         result = simplifier.simplify(["superman", "super", "superheroe"])
         self.assertEqual(result, ["super"])
 
+    def test_simplify_two_different_prefixes(self):
+        """Test prefix simplification with two different prefix groups."""
+        simplifier = LikeSimplifier()
+        result = simplifier.simplify(["batman", "bat", "spider", "spiderman"])
+        self.assertEqual(result, ["bat", "spider"])
+
 
 if __name__ == "__main__":
     unittest.main()
