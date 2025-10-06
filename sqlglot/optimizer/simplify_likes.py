@@ -15,15 +15,16 @@ class LikeSimplifier:
     def simplify(self, likes: list) -> list:
         """Simplify a list of LIKE predicates."""
         if len(likes) <= 1:
-            return likes
+            return [item.lower() for item in likes]
 
-        # Remove duplicates while preserving order
+        # Convert to lowercase and remove duplicates while preserving order
         seen = set()
         unique_likes = []
         for item in likes:
-            if item not in seen:
-                seen.add(item)
-                unique_likes.append(item)
+            lower_item = item.lower()
+            if lower_item not in seen:
+                seen.add(lower_item)
+                unique_likes.append(lower_item)
 
         # Remove elements that have a prefix in the list
         result = []
