@@ -17,24 +17,35 @@ class LikeSimplifier:
         if len(likes) <= 1:
             return [item.lower() for item in likes]
 
-        # Convert to lowercase and remove duplicates while preserving order
-        seen = set()
-        unique_likes = []
-        for item in likes:
-            lower_item = item.lower()
-            if lower_item not in seen:
-                seen.add(lower_item)
-                unique_likes.append(lower_item)
+        # Normalize to lowercase and remove duplicates
+        unique_likes = self._remove_duplicates([item.lower() for item in likes])
 
-        # Remove elements that have a prefix in the list
+        # Remove items that have a prefix in the list
+        simplified = self._remove_items_with_prefix(unique_likes)
+
+        return simplified
+
+    def _remove_duplicates(self, items: list) -> list:
+        """Remove duplicate items while preserving order."""
+        seen = set()
         result = []
-        for item in unique_likes:
-            has_prefix = False
-            for other in unique_likes:
-                if item != other and item.startswith(other):
-                    has_prefix = True
-                    break
-            if not has_prefix:
+        for item in items:
+            if item not in seen:
+                seen.add(item)
+                result.append(item)
+        return result
+
+    def _remove_items_with_prefix(self, items: list) -> list:
+        """Remove items that start with another item in the list."""
+        # Sort by length for efficient checking
+        sorted_items = sorted(items, key=len)
+
+        result = []
+        for i, item in enumerate(sorted_items):
+            # Check if this item starts with any shorter item
+            if not any(item.startswith(other) for other in sorted_items[:i]):
                 result.append(item)
 
-        return result
+        # Restore original order
+        result_set = set(result)
+        return [item for item in items if item in result_set]
