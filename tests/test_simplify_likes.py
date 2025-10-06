@@ -12,6 +12,12 @@ class TestLikeSimplifier(unittest.TestCase):
         result = simplifier.simplify([])
         self.assertEqual(result, [])
 
+    def test_single_element_returns_same(self):
+        """Test that simplifying a single element returns the same element."""
+        simplifier = LikeSimplifier()
+        result = simplifier.simplify(["neron"])
+        self.assertEqual(result, ["neron"])
+
 
 if __name__ == "__main__":
     unittest.main()
