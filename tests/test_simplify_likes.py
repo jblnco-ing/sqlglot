@@ -42,6 +42,12 @@ class TestLikeSimplifier(unittest.TestCase):
         result = simplifier.simplify(["batman", "robin", "batman"])
         self.assertEqual(result, ["batman", "robin"])
 
+    def test_case_insensitive_prefix(self):
+        """Test that prefix matching ignores case and returns lowercase."""
+        simplifier = LikeSimplifier()
+        result = simplifier.simplify(["SUPER", "superman"])
+        self.assertEqual(result, ["super"])
+
 
 if __name__ == "__main__":
     unittest.main()
