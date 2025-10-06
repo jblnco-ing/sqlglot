@@ -14,4 +14,18 @@ class LikeSimplifier:
 
     def simplify(self, likes: list) -> list:
         """Simplify a list of LIKE predicates."""
-        return likes
+        if len(likes) <= 1:
+            return likes
+
+        # Remove elements that have a prefix in the list
+        result = []
+        for item in likes:
+            has_prefix = False
+            for other in likes:
+                if item != other and item.startswith(other):
+                    has_prefix = True
+                    break
+            if not has_prefix:
+                result.append(item)
+
+        return result
