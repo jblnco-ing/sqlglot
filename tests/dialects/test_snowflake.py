@@ -20,6 +20,7 @@ class TestSnowflake(Validator):
 
         self.validate_identity("SELECT GET(a, b)")
         self.validate_identity("SELECT TAN(x)")
+        self.validate_identity("SELECT COS(x)")
         self.assertEqual(
             # Ensures we don't fail when generating ParseJSON with the `safe` arg set to `True`
             self.validate_identity("""SELECT TRY_PARSE_JSON('{"x: 1}')""").sql(),
@@ -30,6 +31,7 @@ class TestSnowflake(Validator):
         expr.selects[0].assert_is(exp.AggFunc)
         self.assertEqual(expr.sql(dialect="snowflake"), "SELECT APPROX_TOP_K(C4, 3, 5) FROM t")
 
+        self.validate_identity("SELECT EXP(1)")
         self.validate_identity("SELECT BIT_LENGTH('abc')")
         self.validate_identity("SELECT BIT_LENGTH(x'A1B2')")
         self.validate_identity("SELECT RTRIMMED_LENGTH(' ABCD ')")
@@ -49,10 +51,13 @@ class TestSnowflake(Validator):
         self.validate_identity("SELECT SOUNDEX_P123(column_name)")
         self.validate_identity("SELECT ABS(x)")
         self.validate_identity("SELECT SIGN(x)")
+        self.validate_identity("SELECT COSH(1.5)")
         self.validate_identity("SELECT JAROWINKLER_SIMILARITY('hello', 'world')")
         self.validate_identity("SELECT TRANSLATE(column_name, 'abc', '123')")
         self.validate_identity("SELECT UNICODE(column_name)")
         self.validate_identity("SELECT SPLIT_PART('11.22.33', '.', 1)")
+        self.validate_identity("SELECT DEGREES(PI() / 3)")
+        self.validate_identity("SELECT DEGREES(1)")
         self.validate_identity("PARSE_URL('https://example.com/path')")
         self.validate_identity("PARSE_URL('https://example.com/path', 1)")
         self.validate_identity("SELECT {*} FROM my_table")
@@ -1450,6 +1455,22 @@ class TestSnowflake(Validator):
         self.validate_identity("SELECT TRY_HEX_DECODE_BINARY('48656C6C6F')")
 
         self.validate_identity("SELECT TRY_HEX_DECODE_STRING('48656C6C6F')")
+
+        self.validate_all(
+            "SELECT ARRAY_CONTAINS(CAST('1' AS VARIANT), ['1'])",
+            read={
+                "presto": "SELECT CONTAINS(ARRAY['1'], '1')",
+                "snowflake": "SELECT ARRAY_CONTAINS(CAST('1' AS VARIANT), ['1'])",
+            },
+        )
+        self.validate_all(
+            "SELECT ARRAY_CONTAINS(CAST(CAST('2020-10-10' AS DATE) AS VARIANT), [CAST('2020-10-10' AS DATE)])",
+            read={
+                "presto": "SELECT CONTAINS(ARRAY[DATE '2020-10-10'], DATE '2020-10-10')",
+                "snowflake": "SELECT ARRAY_CONTAINS(CAST(CAST('2020-10-10' AS DATE) AS VARIANT), [CAST('2020-10-10' AS DATE)])",
+            },
+        )
+        self.validate_identity("SELECT ARRAY_CONTAINS(1, [1])")
 
     def test_null_treatment(self):
         self.validate_all(

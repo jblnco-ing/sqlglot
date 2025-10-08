@@ -5525,6 +5525,10 @@ class Coth(Func):
     pass
 
 
+class Cos(Func):
+    pass
+
+
 class Csc(Func):
     pass
 
@@ -5550,6 +5554,14 @@ class Sinh(Func):
 
 
 class Tan(Func):
+    pass
+
+
+class Degrees(Func):
+    pass
+
+
+class Cosh(Func):
     pass
 
 
@@ -5844,6 +5856,7 @@ class ArrayConstructCompact(Func):
 
 
 class ArrayContains(Binary, Func):
+    arg_types = {"this": True, "expression": True, "ensure_variant": False}
     _sql_names = ["ARRAY_CONTAINS", "ARRAY_HAS"]
 
 
