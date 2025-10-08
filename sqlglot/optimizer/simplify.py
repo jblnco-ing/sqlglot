@@ -141,6 +141,7 @@ def simplify(
             new_node = simplify_datetrunc(new_node, dialect)
             new_node = sort_comparison(new_node)
             new_node = simplify_startswith(new_node)
+            new_node = simplify_like_patterns(new_node)
 
             if new_node is not node:
                 node.replace(new_node)
@@ -1597,3 +1598,68 @@ class Gen:
             self.stack.append(kvs)
             return True
         return False
+
+
+def simplify_like_patterns(expression: exp.Expression) -> exp.Expression:
+    """Simplify redundant LIKE patterns using LikeSimplifier."""
+    from sqlglot.optimizer.simplify_likes import LikeSimplifier
+
+    if not isinstance(expression, exp.Or):
+        return expression
+
+    # Collect LIKE predicates grouped by column
+    like_groups: t.Dict[str, list[exp.Like]] = {}
+    other_predicates = []
+
+    for predicate in expression.flatten():
+        if isinstance(predicate, exp.Like):
+            # Get the column being matched
+            column_sql = predicate.this.sql()
+            if column_sql not in like_groups:
+                like_groups[column_sql] = []
+            like_groups[column_sql].append(predicate)
+        else:
+            other_predicates.append(predicate)
+
+    # If no LIKE predicates, return unchanged
+    if not like_groups:
+        return expression
+
+    # Simplify each group of LIKE predicates
+    simplifier = LikeSimplifier()
+    simplified_predicates = []
+
+    for column, like_nodes in like_groups.items():
+        # Extract patterns
+        patterns = []
+        for like_node in like_nodes:
+            pattern = like_node.args.get("expression")
+            if isinstance(pattern, exp.Literal):
+                pattern_str = pattern.this
+                # Remove the % wildcard for simplification
+                if pattern_str.endswith("%"):
+                    pattern_str = pattern_str[:-1]
+                patterns.append(pattern_str)
+
+        # Simplify patterns
+        simplified_patterns = simplifier.simplify(patterns)
+
+        # Reconstruct LIKE nodes
+        for pattern in simplified_patterns:
+            # Add back the % wildcard
+            pattern_with_wildcard = pattern + "%"
+            new_like = exp.Like(
+                this=like_nodes[0].this.copy(),
+                expression=exp.Literal.string(pattern_with_wildcard)
+            )
+            simplified_predicates.append(new_like)
+
+    # Combine with other predicates
+    all_predicates = simplified_predicates + other_predicates
+
+    if len(all_predicates) == 0:
+        return expression
+    elif len(all_predicates) == 1:
+        return all_predicates[0]
+    else:
+        return exp.or_(*all_predicates)

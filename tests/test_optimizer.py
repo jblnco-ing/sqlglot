@@ -1683,3 +1683,13 @@ FROM READ_CSV('tests/fixtures/optimizer/tpc-h/nation.csv.gz', 'delimiter', '|') 
         self.assertEqual(
             annotated.selects[0].type.sql("snowflake"), 'OBJECT("foo" VARCHAR, "a b" VARCHAR)'
         )
+
+    def test_simplify_like_prefixes(self):
+        # Test that redundant LIKE patterns with prefixes are simplified
+        sql = "SELECT * FROM t WHERE col LIKE 'super%' OR col LIKE 'superman%' OR col LIKE 'batman%' OR col LIKE 'bat%'"
+        result_parsed = parse_one(sql)
+
+        result = optimizer.simplify.simplify(result_parsed)
+
+        # Should simplify to just 'super%' since it subsumes 'superman%' and 'bat% since it subsumes 'batman%'
+        self.assertEqual(result.sql(), "SELECT * FROM t WHERE col LIKE 'bat%' OR col LIKE 'super%'")
